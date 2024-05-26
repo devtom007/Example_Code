@@ -1,3 +1,6 @@
 # Description
+ A brief overview of code in Master's:
 
-## subheading
+ Thesis: Establishing a valid statistical framework to test unconscious processing using Bayesian Stats.
+
+
