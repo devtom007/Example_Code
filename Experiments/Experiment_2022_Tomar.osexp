@@ -1,0 +1,431 @@
+---
+API: 2.1
+OpenSesame: 3.3.12
+Platform: nt
+---
+set width 1024
+set uniform_coordinates yes
+set title "Extended template"
+set subject_parity even
+set subject_nr 0
+set start experiment
+set sound_sample_size -16
+set sound_freq 48000
+set sound_channels 2
+set sound_buf_size 1024
+set round_decimals 2
+set height 768
+set fullscreen no
+set form_clicks no
+set foreground white
+set font_underline no
+set font_size 18
+set font_italic no
+set font_family mono
+set font_bold no
+set experiment_path None
+set disable_garbage_collection yes
+set description "A template containing a practice and an experimental phase"
+set coordinates uniform
+set compensation 0
+set canvas_backend psycho
+set bidi yes
+set background black
+
+define inline_script Visual_search
+	set description "Executes Python code"
+	___run__
+	
+	fix_dot_cnvs.show()
+	var.sleep(500)
+	circle_cnvs.show()
+	var.sleep(1000)
+	blank_cnvs.show()
+	var.sleep(3000)
+	visual_search_cnvs.show()
+	blank_cnvs.show()
+	var.sleep(500)
+	final_circle_cnvs = Canvas()
+	__end__
+	___prepare__
+	#Importing the required modules
+	import random
+	from math import pi, cos, sin
+	
+	# Getting the variables
+	distractor_type = var.distractor_type
+	tlo = var.target_orientation 
+	
+	#Canvases
+	
+	fix_dot_cnvs = Canvas()
+	blank_cnvs = Canvas()
+	circle_cnvs = Canvas()
+	visual_search_cnvs = Canvas()
+	final_circle_cnvs = Canvas()
+	instruction_cnvs = Canvas()
+	
+	# The fix dot 
+	
+	fix_dot_cnvs.fixdot()
+	
+	#Color pool
+	
+	color_pool = ['red', 'green', 'blue', 'yellow']
+	random.shuffle(color_pool)
+	unrelated_color = color_pool.pop()
+	target_color = random.choice(color_pool)
+	shade_red = [ '#cc0000', '#ff0000', '#990000', '#ff3333']
+	
+	shade_green = ['#0d9900', '#11cc00', '#15ff00', '#44ff33']
+	
+	shade_blue = ['#0000cc', '#0000ff', '#3333ff', '#000099']
+	
+	shade_yellow = [ '#ffea00', '#998c00', '#ccbb00', '#ffee33']
+	
+	if target_color == 'red':
+	    target_shade = shade_red.pop()
+	    unrelated_shade = random.choice(shade_red)
+	elif target_color == 'green':
+	    target_shade = shade_green.pop()
+	    unrelated_shade = random.choice(shade_green)
+	elif target_color == 'blue':
+	    target_shade = shade_blue.pop()
+	    unrelated_shade = random.choice(shade_blue)
+	elif target_color == 'yellow':
+	    target_shade = shade_yellow.pop()
+	    unrelated_shade = random.choice(shade_yellow)
+	
+	
+	
+	# The to be memorized circle-:
+	
+	circle_cnvs.circle( x = 0, y = 0, r = 75, color = target_shade , fill = 1,)
+	
+	# Creating Cirlce Stimuli
+	
+	# function to create stimuli
+	def calculateCirclePositions(cx, cy, r, set_size):
+		'''
+		Function calculates a circular configuration of x,y coordinates
+		
+		Arguments
+		_________
+		cx (int): the x coordinate that indicates the center of the circle on the horizontal plane
+		cy (int): the y coordinate that indicates the center of the circle on the vertical plane
+		r (int): the radius of the circle
+		set_size (int): : The number of positions that need to be calculated on the circle
+		
+		Returns 
+		________
+		circle_positions (list): calculated circle positions in tuple format
+		'''
+		from math import pi, cos, sin
+		
+		# calculate angle between adjacent items
+		angle_segment = 2*pi/set_size 
+		circle_positions = []
+		
+		for i in range(set_size):
+			x = r * cos(i*angle_segment) + cx 
+			y = r * sin(i*angle_segment) + cy 
+			circle_positions.append( (x,y) ) 
+			
+		return circle_positions
+	
+	# variables
+	circle_positions = calculateCirclePositions(0, 0, 250,8)
+	random.shuffle(circle_positions)
+	
+	# Selecting the search type
+	shapes = ['circle', 'diamond']
+	search_type = random.choice(shapes)
+	# loop overall search positions
+	
+	visual_search_cnvs.fixdot()
+	
+	for i,(x,y) in enumerate(circle_positions):
+	    if search_type == 'diamond':
+	        if i == 0:
+	            n1 = circle_positions [i][0]-55,circle_positions[i][1]
+	            n2 = circle_positions [i][0],circle_positions[i][1]-55
+	            n3 = circle_positions [i][0]+55,circle_positions[i][1]
+	            n4 = circle_positions [i][0],circle_positions[i][1]+55
+	            visual_search_cnvs.polygon([n1,n2,n3,n4], color = 'grey', penwidth = 6, fill = 1)
+	            if tlo == 'vertical':
+	                visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	            elif tlo == 'horizontal':
+	                visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	        elif i== 2:
+	            if distractor_type == 'none':
+	                visual_search_cnvs.circle(x = circle_positions [i][0], y = circle_positions[i][1], r = 50, color = 'grey',penwidth =3, fill = 1)
+	                line = random.choice(['vertical','horizontal'])
+	                if line == 'vertical':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	                elif line == 'horizontal':
+	                   visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	            elif distractor_type == 'same':
+	                visual_search_cnvs.circle(x = circle_positions [i][0], y = circle_positions[i][1], r = 50, color = target_shade ,penwidth = 3, fill = 1)
+	                line = random.choice(['vertical','horizontal'])
+	                if line == 'vertical':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	                elif line == 'horizontal':
+	                   visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	            elif distractor_type == 'unrelated':
+	                visual_search_cnvs.circle(x = circle_positions [i][0], y = circle_positions[i][1], r = 50, color = unrelated_color ,penwidth = 3, fill = 1)
+	                line = random.choice(['vertical','horizontal'])
+	                if line == 'vertical':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	                elif line == 'horizontal':
+	                   visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	                
+	        else:
+	            visual_search_cnvs.circle(x = circle_positions [i][0], y = circle_positions[i][1], r = 50, color = 'grey', penwidth = 3, fill = 1)
+	            line = random.choice(['vertical','horizontal'])
+	            if line == 'vertical':
+	                 visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	            elif line == 'horizontal':
+	                visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	                
+	    elif search_type == 'circle':
+	        if i == 0:
+	            visual_search_cnvs.circle(x = circle_positions [i][0], y = circle_positions[i][1], r = 50, color = 'grey',penwidth = 3, fill = 1)
+	            line = random.choice(['vertical','horizontal'])
+	            if line == 'vertical':
+	                 visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	            elif line == 'horizontal':
+	                visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	        elif i == 2:
+	            if distractor_type == 'none':
+	                n1 = circle_positions [i][0]-55,circle_positions[i][1]
+	                n2 = circle_positions [i][0],circle_positions[i][1]-55
+	                n3 = circle_positions [i][0]+55,circle_positions[i][1]
+	                n4 = circle_positions [i][0],circle_positions[i][1]+55
+	                visual_search_cnvs.polygon([n1,n2,n3,n4], color = 'grey', penwidth = 6, fill = 1)
+	                line = random.choice(['vertical','horizontal'])
+	                if line == 'vertical':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	                elif line == 'horizontal':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	            elif distractor_type == 'same':
+	                n1 = circle_positions [i][0]-55,circle_positions[i][1]
+	                n2 = circle_positions [i][0],circle_positions[i][1]-55
+	                n3 = circle_positions [i][0]+55,circle_positions[i][1]
+	                n4 = circle_positions [i][0],circle_positions[i][1]+55
+	                visual_search_cnvs.polygon([n1,n2,n3,n4], color = target_shade, penwidth = 6, fill = 1)
+	                line = random.choice(['vertical','horizontal'])
+	                if line == 'vertical':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	                elif line == 'horizontal':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	            elif distractor_type == 'unrelated':
+	                n1 = circle_positions [i][0]-55,circle_positions[i][1]
+	                n2 = circle_positions [i][0],circle_positions[i][1]-55
+	                n3 = circle_positions [i][0]+55,circle_positions[i][1]
+	                n4 = circle_positions [i][0],circle_positions[i][1]+55
+	                visual_search_cnvs.polygon([n1,n2,n3,n4], color = unrelated_color, penwidth = 6, fill = 1)
+	                line = random.choice(['vertical','horizontal'])
+	                if line == 'vertical':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	                elif line == 'horizontal':
+	                    visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	        else:
+	             n1 = circle_positions [i][0]-55,circle_positions[i][1]
+	             n2 = circle_positions [i][0],circle_positions[i][1]-55
+	             n3 = circle_positions [i][0]+55,circle_positions[i][1]
+	             n4 = circle_positions [i][0],circle_positions[i][1]+55
+	             visual_search_cnvs.polygon([n1,n2,n3,n4], color = 'grey', penwidth = 6, fill = 1)
+	             line = random.choice(['vertical','horizontal'])
+	             if line == 'vertical':
+	                 visual_search_cnvs.line(sx =circle_positions [i][0], sy = circle_positions [i][1]+40, ex = circle_positions [i][0], ey = circle_positions [i][1]-40)
+	             elif line == 'horizontal':
+	                visual_search_cnvs.line(sx =circle_positions [i][0]+40, sy = circle_positions [i][1], ex = circle_positions [i][0]-40, ey = circle_positions [i][1])
+	            
+	
+	
+	# Final memory test
+	final_circle_cnvs.circle(x= -200, y = 0, r = 75, color = target_shade)
+	final_circle_cnvs.circle(x= +200, y = 0, r = 75, color = unrelated_shade)
+	final_circle_cnvs.circle(x= 0, y = 0, r = 75, color = unrelated_shade)
+	
+	if tlo == 'vertical':
+	    var.correct_response = 'up'
+	elif tlo == 'horizontal':
+	    var.correct_response = 'left'
+	    
+	__end__
+
+define notepad about_this_template
+	__note__
+	This template already contains the basic structure of a typical experiment.
+	It consists of a practice phase, followed by an experimental phase. For more
+	information, please visit <http://osdoc.cogsci.nl/>
+	Have fun with OpenSesame!
+	__end__
+	set description "Some pointers to help you gest started!"
+
+define loop block_loop
+	set source table
+	set skip 0
+	set repeat 1
+	set order random
+	set offset no
+	set item trial_sequence
+	set description "A single block of trials"
+	set cycles 6
+	set continuous no
+	set column_order ""
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 distractor_type none
+	setcycle 0 target_orientation horizontal
+	setcycle 0 correct_response left
+	setcycle 1 distractor_type same
+	setcycle 1 target_orientation horizontal
+	setcycle 1 correct_response left
+	setcycle 2 distractor_type unrelated
+	setcycle 2 target_orientation horizontal
+	setcycle 2 correct_response left
+	setcycle 3 distractor_type none
+	setcycle 3 target_orientation vertical
+	setcycle 3 correct_response up
+	setcycle 4 distractor_type same
+	setcycle 4 target_orientation vertical
+	setcycle 4 correct_response up
+	setcycle 5 distractor_type unrelated
+	setcycle 5 target_orientation vertical
+	setcycle 5 correct_response up
+	run trial_sequence
+
+define sequence block_sequence
+	set flush_keyboard yes
+	set description "A sequence containing a single block of trials followed by feedback to the participant"
+	run reset_feedback always
+	run block_loop always
+	run feedback always
+
+define keyboard_response circle_response
+	set timeout infinite
+	set flush yes
+	set event_type keypress
+	set duration keypress
+	set description "Collects keyboard responses"
+	set correct_response circle_response
+	set allowed_responses "1;2;3"
+
+define sketchpad end_of_experiment
+	set start_response_interval no
+	set duration keypress
+	set description "A sketchpad notifying the participant that the experiment is finished"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Press any key to exit" x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Thank You for participating in the experiment!" x=32 y=0 z_index=0
+
+define sketchpad end_of_practice
+	set start_response_interval no
+	set duration keypress
+	set description "A sketchpad notifying the participant that the practice phase is finished"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="End of Practice.<br /><br />The experiment will begin now.<br /><br />Press any key to continue" x=0 y=0 z_index=0
+
+define sequence experiment
+	set flush_keyboard yes
+	set description "The main sequence of the experiment"
+	run about_this_template always
+	run instructions always
+	run practice_loop always
+	run end_of_practice always
+	run experimental_loop always
+	run end_of_experiment always
+
+define loop experimental_loop
+	set source table
+	set skip 0
+	set repeat 5
+	set order random
+	set offset no
+	set item block_sequence
+	set description "A loop containing one or more experimental blocks"
+	set cycles 1
+	set continuous no
+	set column_order practice
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 practice no
+	run block_sequence
+
+define feedback feedback
+	set reset_variables yes
+	set duration keypress
+	set description "Provides feedback to the participant"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Your average response time was [avg_rt]ms<br /><br />Your accuracy was [acc]%<br /><br />Press any key to continue" x=0 y=0 z_index=0
+
+define sketchpad green_dot
+	set duration 500
+	set description "Displays stimuli"
+	draw fixdot color=green show_if=always style=default x=0 y=0 z_index=0
+
+define sketchpad instructions
+	set start_response_interval no
+	set duration keypress
+	set description "A sketchpad containing the instructions for the participant"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Welcome to the Experiment. <br />You will be shown a series of slides. <br /><br />In the first slide you will be required to remember the color of a circle. <br /><br />After which a display will appear containing a series of circle or diamonds, with horizontal and vertical lines inside them.<br /><br />If the series consists of circles, you need to search for the diamond, and if the series consists of diamonds, you need to search for the circle. <br /><br />After that you must indicate if the line in the target shape is vertical or horizontal. <br /><br />Vertical line - Up-arrow key<br />Horizontal line - Left-arrow key<br /><br />After this you will be shown three circles. And you have to indicate which circle's color matches with the circle you saw previously Press 1 for the left circle, 2 for the centre circle and 3 for the right circle.<br /><br />Remember to be as quick as possible. As you will be evaluated on your time and accuracy<br /><br />You will start with a practice session.<br /><br />Press any key to continue " x=0 y=0 z_index=0
+
+define keyboard_response keyboard_response
+	set timeout infinite
+	set flush yes
+	set event_type keypress
+	set duration keypress
+	set description "Collects keyboard responses"
+	set allowed_responses "left; up"
+
+define logger logger
+	set description "Logs experimental data"
+	set auto_log yes
+
+define loop practice_loop
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 1
+	set order random
+	set offset no
+	set item block_sequence
+	set description "A loop containing one or more practice blocks"
+	set cycles 1
+	set continuous no
+	set column_order practice
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 practice yes
+	run block_sequence
+
+define sketchpad red_dot
+	set duration 500
+	set description "Displays stimuli"
+	draw fixdot color=red show_if=always style=default x=0 y=0 z_index=0
+
+define reset_feedback reset_feedback
+	set description "Resets the feedback variables, such as 'avg_rt' and 'acc'"
+
+define inline_script trial_feedback
+	set description "Executes Python code"
+	___run__
+	# is only run when incorrect response is given
+	feedback_cnvs.show()
+	clock.sleep(1000)
+	__end__
+	___prepare__
+	#  create canvasses
+	feedback_cnvs = canvas()
+	feedback_cnvs.fixdot(color = 'red')
+	__end__
+
+define sequence trial_sequence
+	set flush_keyboard yes
+	set description "A single trial"
+	run Visual_search always
+	run keyboard_response always
+	run circle_response always
+	run green_dot "[correct_keyboard_response] = 1"
+	run red_dot "[correct_keyboard_response] = 0"
+	run logger always
+
